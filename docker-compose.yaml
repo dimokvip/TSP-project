@@ -1,0 +1,13 @@
+services:
+  mongo:
+    image: mongo:8.0.5
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_db:/data/db
+      - mongo_configdb:/data/configdb
+
+volumes:
+  mongo_db:
+  mongo_configdb:
