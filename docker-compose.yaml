@@ -1,13 +1,18 @@
+version: '3.8'
+
 services:
-  mongo:
-    image: mongo:8.0.5
-    restart: unless-stopped
+  postgres:
+    image: postgres:15
+    container_name: my_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydb
     ports:
-      - "27017:27017"
+      - "5432:5432"
     volumes:
-      - mongo_db:/data/db
-      - mongo_configdb:/data/configdb
+      - pgdata:/var/lib/postgresql/data
 
 volumes:
-  mongo_db:
-  mongo_configdb:
+  pgdata:
