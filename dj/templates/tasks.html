@@ -1,0 +1,15 @@
+{% extends "newapp/base.html" %}
+{% block title %}Мои задачи{% endblock %}
+{% block content %}
+<h2>Мои задачи</h2>
+<a href="/tasks/new"> Новая задача</a>
+<ul>
+    {% for task in tasks %}
+        <li>
+            <strong>{{ task.title }}</strong> — {{ task.description }}
+            [<a href="/tasks/{{ task.id }}/edit">Редактировать</a>]
+            [<a href="/tasks/{{ task.id }}/delete">Удалить</a>]
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}

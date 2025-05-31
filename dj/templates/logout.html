@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Выход</title>
+</head>
+<body>
+<script>
+    localStorage.removeItem('access');
+    localStorage.removeItem('refresh');
+    window.location.href = '/api/login/';  // Или куда хочешь редиректить после выхода
+</script>
+<p>Выход...</p>
+</body>
+</html>

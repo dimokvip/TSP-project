@@ -18,6 +18,6 @@ from django.contrib import admin
 from django.urls import path,include
 
 urlpatterns = [
-        #path('admin/', admin.site.urls),
-        path('api/', include ('newapp.urls'))
+    path('', include('newapp.urls')),       # HTML страницы (регистрация, логин-html, профиль и пр)
+    path('api/', include('newapp.api_urls')),  # API пути (login, logout, tasks, users и пр)
 ]

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Профиль пользователя</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
+  <div class="container">
+    <a class="navbar-brand" href="/">TaskManager</a>
+    <div>
+      <button id="logoutBtn" class="btn btn-outline-danger btn-sm">Выйти</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h1 class="card-title">Профиль пользователя</h1>
+      <p class="lead">Добро пожаловать, <span id="username"></span>!</p>
+    </div>
+  </div>
+
+  <!-- Форма фильтров -->
+  <div class="mb-4">
+    <form id="filterForm" class="row gy-2 gx-3 align-items-end">
+      <div class="col-md-4">
+        <label for="tagsFilter" class="form-label">Фильтр по тегам:</label>
+        <select id="tagsFilter" class="form-select" multiple size="4" aria-label="Фильтр по тегам"></select>
+      </div>
+
+      <div class="col-md-3">
+        <label for="priorityFilter" class="form-label">Приоритет:</label>
+        <select id="priorityFilter" class="form-select">
+          <option value="">Все</option>
+          <option value="low">Низкий</option>
+          <option value="medium">Средний</option>
+          <option value="high">Высокий</option>
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <label for="orderingFilter" class="form-label">Сортировка:</label>
+        <select id="orderingFilter" class="form-select">
+          <option value="-created_at">Сначала новые</option>
+          <option value="created_at">Сначала старые</option>
+          <option value="deadline">По сроку (возр.)</option>
+          <option value="-deadline">По сроку (убыв.)</option>
+        </select>
+      </div>
+
+      <div class="col-md-2 d-grid gap-2">
+        <button type="submit" class="btn btn-primary">Применить</button>
+        <button type="button" id="resetFilters" class="btn btn-secondary">Сбросить</button>
+      </div>
+    </form>
+  </div>
+
+  <h3>Ваши задачи</h3>
+  <a class="btn btn-primary mb-3" id="toCreateTask">Создать задачу</a>
+  <div id="tasksList" class="row gy-3"></div>
+</div>
+
+<script>
+  async function loadTags() {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+
+    const res = await fetch('/api/tags/user-tags/', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) return;
+
+    const tags = await res.json();
+    const select = document.getElementById('tagsFilter');
+    select.innerHTML = '';
+    tags.forEach(tag => {
+      const option = document.createElement('option');
+      option.value = tag.id;
+      option.textContent = tag.name;
+      select.appendChild(option);
+    });
+  }
+
+  function getBadgeClass(value, type) {
+    if (type === 'priority') {
+      return {
+        low: 'bg-success',
+        medium: 'bg-warning text-dark',
+        high: 'bg-danger'
+      }[value] || 'bg-secondary';
+    } else if (type === 'status') {
+      return {
+        new: 'bg-primary',
+        in_progress: 'bg-info text-dark',
+        done: 'bg-success'
+      }[value] || 'bg-secondary';
+    }
+    return 'bg-secondary';
+  }
+
+  async function loadTasksWithFilters() {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      window.location.href = '/login-html/';
+      return;
+    }
+
+    const tags = Array.from(document.getElementById('tagsFilter').selectedOptions).map(opt => opt.value).join(',');
+    const priority = document.getElementById('priorityFilter').value;
+    const ordering = document.getElementById('orderingFilter').value;
+
+    let url = `/api/profile/?`;
+    if (tags) url += `tags=${tags}&`;
+    if (priority) url += `priority=${priority}&`;
+    if (ordering) url += `ordering=${ordering}&`;
+
+    const response = await fetch(url, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+
+    if (!response.ok) {
+      localStorage.clear();
+      window.location.href = '/login-html/';
+      return;
+    }
+
+    const data = await response.json();
+    document.getElementById('username').textContent = data.user.first_name || data.user.email;
+
+    const tasksList = document.getElementById('tasksList');
+    tasksList.innerHTML = '';
+
+    if (data.tasks.length === 0) {
+      tasksList.innerHTML = '<p class="text-muted">У вас пока нет задач.</p>';
+    } else {
+      data.tasks.forEach(task => {
+        const col = document.createElement('div');
+        col.className = 'col-md-6 col-lg-4';
+
+        const card = document.createElement('div');
+        card.className = 'card h-100 shadow-sm';
+
+        const cardBody = document.createElement('div');
+        cardBody.className = 'card-body d-flex flex-column';
+
+        const title = document.createElement('h5');
+        title.className = 'card-title';
+        title.textContent = task.title;
+
+        const description = document.createElement('p');
+        description.className = 'card-text';
+        description.textContent = task.description || 'Без описания';
+
+        const status = document.createElement('span');
+        status.className = `badge ${getBadgeClass(task.status, 'status')} me-2`;
+        status.textContent = 'Статус: ' + (task.status || 'не задан');
+
+        const priority = document.createElement('span');
+        priority.className = `badge ${getBadgeClass(task.priority, 'priority')} me-2`;
+        priority.textContent = 'Приоритет: ' + (task.priority || 'не задан');
+
+        const tagsContainer = document.createElement('div');
+        tagsContainer.className = 'mt-2 mb-2';
+        if (task.tags && task.tags.length > 0) {
+          task.tags.forEach(tag => {
+            const tagSpan = document.createElement('span');
+            tagSpan.className = 'badge bg-secondary me-1 mb-1';
+            tagSpan.textContent = tag.name;
+            tagsContainer.appendChild(tagSpan);
+          });
+        }
+
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.className = 'mt-auto d-flex justify-content-between';
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn btn-sm btn-outline-primary';
+        editBtn.textContent = 'Редактировать';
+        editBtn.onclick = () => window.location.href = `/edit-task.html?id=${task.id}`;
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-sm btn-outline-danger';
+        deleteBtn.textContent = 'Удалить';
+        deleteBtn.onclick = async () => {
+          if (confirm('Удалить задачу?')) {
+            const res = await fetch(`/api/tasks/${task.id}/`, {
+              method: 'DELETE',
+              headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.ok) {
+              loadTasksWithFilters();
+            }
+          }
+        };
+
+        buttonsContainer.appendChild(editBtn);
+        buttonsContainer.appendChild(deleteBtn);
+
+        cardBody.appendChild(title);
+        cardBody.appendChild(description);
+        cardBody.appendChild(status);
+        cardBody.appendChild(priority);
+        cardBody.appendChild(tagsContainer);
+        cardBody.appendChild(buttonsContainer);
+
+        card.appendChild(cardBody);
+        col.appendChild(card);
+        tasksList.appendChild(col);
+      });
+    }
+  }
+
+  document.getElementById('filterForm').addEventListener('submit', e => {
+    e.preventDefault();
+    loadTasksWithFilters();
+  });
+
+  document.getElementById('resetFilters').addEventListener('click', () => {
+    document.getElementById('tagsFilter').selectedIndex = -1;
+    document.getElementById('priorityFilter').value = '';
+    document.getElementById('orderingFilter').value = '-created_at';
+    loadTasksWithFilters();
+  });
+
+  document.getElementById('toCreateTask').onclick = () => {
+    window.location.href = '/create-task.html';
+  };
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    localStorage.clear();
+    window.location.href = '/login-html/';
+  });
+
+  loadTags().then(() => loadTasksWithFilters());
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

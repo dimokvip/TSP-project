@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
+  <div class="container">
+    <a class="navbar-brand" href="/">TaskManager</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h3 class="card-title mb-4 text-center">Login</h3>
+          
+          <form id="loginForm">
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input type="email" id="email" class="form-control" required autofocus />
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <input type="password" id="password" class="form-control" required />
+            </div>
+
+            <div id="errorMessage" class="text-danger mb-3" style="display:none;"></div>
+
+            <button type="submit" class="btn btn-primary w-100">Log In</button>
+          </form>
+
+          <p class="mt-3 text-center">
+            Don't have an account? <a href="/register-html/">Register</a>
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const errorDiv = document.getElementById('errorMessage');
+  errorDiv.style.display = 'none';
+
+  try {
+    // Запрос на получение токенов
+    const response = await fetch('/api/login/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!response.ok) {
+      throw new Error('Invalid email or password');
+    }
+
+    const data = await response.json();
+    localStorage.setItem('access_token', data.access);
+    localStorage.setItem('refresh_token', data.refresh);
+
+    // Теперь запросим профиль с токеном
+    const profileResponse = await fetch('/api/profile/', {
+      headers: {
+        'Authorization': 'Bearer ' + data.access
+      }
+    });
+
+    if (!profileResponse.ok) {
+      throw new Error('Failed to fetch profile');
+    }
+
+    // Если профиль получен успешно, перенаправляем на страницу профиля
+    window.location.href = '/profile-html/';
+
+  } catch (error) {
+    errorDiv.textContent = error.message;
+    errorDiv.style.display = 'block';
+  }
+});
+</script>
+
+</body>
+</html>

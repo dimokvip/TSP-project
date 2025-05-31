@@ -1,25 +1,15 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import UserViewSet, TaskViewSet, TagViewSet, ProtectedView
-
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-    TokenVerifyView,
-)
-from .views import RegisterView, ChangePasswordView, LogoutView
-router = DefaultRouter()
-router.register(r'users', UserViewSet)
-router.register(r'tasks', TaskViewSet)
-router.register(r'tags', TagViewSet)
+from django.urls import path
+from . import views
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('register/', RegisterView.as_view(), name='register'),
-    path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-    path('change-password/', ChangePasswordView.as_view(), name='change_password'),
-    path('logout/', LogoutView.as_view(), name='logout'),
-    path('protected/', ProtectedView.as_view(), name='protected'),
+    path('', views.home, name='home'),
+    path('login-html/', views.login_page, name='login'),
+    path('logout/', views.logout_html_view, name='logout'),
+    path('register-html/', views.register_page, name='register_page'),
+    path('profile/', views.profile_view, name='profile'),
+    path('profile-html/', views.profile_page, name='profile_page'),
+    path('create-task-html/', views.create_task_view, name='create_task'),
+    path('register/', views.register_view, name='register'),
+    path('create-task.html', views.create_task_page, name='create_task_page'),
+
 ]

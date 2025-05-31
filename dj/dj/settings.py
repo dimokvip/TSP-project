@@ -57,13 +57,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # Наше кастомное middleware
     'newapp.middlewares.ExemptAuthMiddleware',
 ]
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(minutes=30),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
@@ -100,7 +99,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'dj.wsgi.application'
-
+LOGIN_URL = '/login-html/'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
